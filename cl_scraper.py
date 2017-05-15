@@ -6,6 +6,7 @@ import craigslist_scraper
 from craigslist_scraper import scraper
 import numpy as np
 import psycopg2
+import time
 #dbname = scraper, table = re_data
 
 #TO DO:
@@ -68,11 +69,12 @@ def DBbuild():
 	return con, cur
 
 def DBwrite(re_data, con, cur):
+	today = datetime.date.today().strftime("%D")
 	try:
 		qry = '''
-		insert into re_data (address, latitude, longitude, sqfeet, fulltitle, neighborhood, price, title) values (%s, %s, %s, %s, %s, %s, %s, %s)
+		insert into re_data (address, latitude, longitude, sqfeet, fulltitle, neighborhood, price, title, url, date) values (%s, %s, %s, %s, %s, %s, %s, %s)
 		''' 
-		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title))
+		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title, url, today))
 		print 'insert success'
 		con.commit()
 	except:
@@ -84,32 +86,26 @@ def checkdb():
 	
 	for record in cur:
 		print record
+	print '%s records added'.format(len(cur))	
 
-#def main():
-url_list = json.load(open('cl_listings.json'))
-con, cur = DBbuild()
-
-for i in np.arange(0,2500,100):
-	print 'index is %s' % i
-	urls = getResults(i)
-	for url in urls[:2]:
-		if url not in url_list or url in url_list:
-			
-			print url
-			url_list.append(url)
-			re_data = scraper.scrape_url(url)
-			AddMeta(re_data)
-			print re_data.price
-			print re_data.sqfeet
-			print re_data.neighborhood
-			print re_data.longitude
-			print re_data.latitude
-
-			DBwrite(re_data, con, cur) #Build this function
-
-	with open('cl_listings.json', 'w') as f:
-	        json.dump(list(set(url_list)), f)	
+def main():
+	url_list = json.load(open('cl_listings.json'))
+	con, cur = DBbuild()
+	for i in np.arange(0,2500,100):
+		print 'index is %s'.format(i)
+		urls = getResults(i)
+		for url in urls:
+			if url not in url_list:
+				url_list.append(url)
+				re_data = scraper.scrape_url(url)
+				AddMeta(re_data)
+				DBwrite(re_data, con, cur) #Build this function
+				print 'record added'
+				time.sleep(2)
+		with open('cl_listings.json', 'w') as f:
+		        json.dump(list(set(url_list)), f)	
 
 
 if __name__ == "__main__":
 	main()
+	checkdb()
