@@ -7,6 +7,8 @@ from craigslist_scraper import scraper
 import numpy as np
 import psycopg2
 import time
+import datetime
+
 #dbname = scraper, table = re_data
 
 #TO DO:
@@ -86,36 +88,40 @@ def checkdb():
 
 	print '%s total records'.format(len(cur))	
 
-def main():
-	url_list = json.load(open('cl_listings.json'))
-	con, cur = DBbuild()
-	for i in np.arange(0,2500,100):
-		print 'index is %s'.format(i)
-		urls = getResults(i)
-		for url in urls:
-			if url not in url_list:
-				url_list.append(url)
-				try:
-					re_data = scraper.scrape_url(url)
-				except:
-					print 'problem scraping'
-					print 'url is %s'.format(url)
-					continue
-				try:
-					AddMeta(re_data)
-				except:
-					print 'problem adding additional meta'
-					print 'url is %s'.format(url)
-					continue
-				try:
-					DBwrite(re_data, con, cur) #Build this function
-				except:
-					print 'problem writing to db'
-					print 'url is %s'.format(url)
-					continue
-				time.sleep(2)
-		with open('cl_listings.json', 'w') as f:
-		        json.dump(list(set(url_list)), f)	
+#def main():
+url_list = json.load(open('cl_listings.json'))
+con, cur = DBbuild()
+#for i in np.arange(0,2500,100):
+i = 50
+
+urls = getResults(i)
+for url in urls:
+	print 'index is %s' % (i)
+	if url not in url_list:
+		url_list.append(url)
+		try:
+			re_data = scraper.scrape_url(url)
+		except:
+			print 'problem scraping'
+			print 'url is %s' % (url)
+			continue
+		try:
+			AddMeta(re_data)
+		except:
+			print 'problem adding additional meta'
+			print 'url is %s' % (url)
+			continue
+		try:
+			DBwrite(re_data, con, cur) #Build this function
+		except:
+			print 'problem writing to db'
+			print 'url is %s' % (url)
+			continue
+		time.sleep(2)
+	else:
+		continue	
+	with open('cl_listings.json', 'w') as f:
+	        json.dump(list(set(url_list)), f)	
 
 
 if __name__ == "__main__":
