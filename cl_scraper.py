@@ -124,4 +124,4 @@ def main(con,cur):
 if __name__ == "__main__":
 	con, cur = DBbuild()
 	main(con,cur)
-	checkdb(con,cur)
+	#checkdb(con,cur)
