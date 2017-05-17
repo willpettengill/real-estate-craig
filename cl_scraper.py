@@ -92,7 +92,7 @@ def main(con,cur):
 	url_list = json.load(open('cl_listings.json'))
 	for i in np.arange(0,2500,100):
 		urls = getResults(i)
-		for url in urls:
+		for url in urls[:2]:
 			print 'index is %s' % (i)
 			if url not in url_list:
 				url_list.append(url)
