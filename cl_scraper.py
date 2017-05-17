@@ -91,7 +91,9 @@ def checkdb(con, cur):
 def main(con,cur):
 	url_list = json.load(open('cl_listings.json'))
 	for i in np.arange(0,2500,100):
+		print 'i is %s' % i
 		urls = getResults(i)
+		print 'got results'
 		for url in urls[:2]:
 			print 'index is %s' % (i)
 			if url not in url_list:
@@ -110,14 +112,15 @@ def main(con,cur):
 					continue
 				try:
 					DBwrite(re_data, con, cur) #Build this function
+					print 'wrote to db'
 				except:
 					print 'problem writing to db'
 					print 'url is %s' % (url)
 					continue
 				time.sleep(2)
 			
-		with open('cl_listings.json', 'w') as f:
-		        json.dump(list(set(url_list)), f)	
+	with open('cl_listings.json', 'w') as f:
+	        json.dump(list(set(url_list)), f)	
 
 
 if __name__ == "__main__":
