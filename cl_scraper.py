@@ -83,10 +83,8 @@ def DBwrite(re_data, con, cur):
 def checkdb():
 	qry = 'select * from re_data'
 	cur.execute(qry, con)
-	
-	for record in cur:
-		print record
-	print '%s records added'.format(len(cur))	
+
+	print '%s total records'.format(len(cur))	
 
 def main():
 	url_list = json.load(open('cl_listings.json'))
@@ -97,10 +95,24 @@ def main():
 		for url in urls:
 			if url not in url_list:
 				url_list.append(url)
-				re_data = scraper.scrape_url(url)
-				AddMeta(re_data)
-				DBwrite(re_data, con, cur) #Build this function
-				print 'record added'
+				try:
+					re_data = scraper.scrape_url(url)
+				except:
+					print 'problem scraping'
+					print 'url is %s'.format(url)
+					continue
+				try:
+					AddMeta(re_data)
+				except:
+					print 'problem adding additional meta'
+					print 'url is %s'.format(url)
+					continue
+				try:
+					DBwrite(re_data, con, cur) #Build this function
+				except:
+					print 'problem writing to db'
+					print 'url is %s'.format(url)
+					continue
 				time.sleep(2)
 		with open('cl_listings.json', 'w') as f:
 		        json.dump(list(set(url_list)), f)	
