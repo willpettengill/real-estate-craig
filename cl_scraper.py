@@ -86,7 +86,7 @@ def checkdb(con, cur):
 	qry = 'select * from re_data'
 	cur.execute(qry, con)
 
-	print '%s total records' % (cur.rowcount())	
+	print '%s total records' % (cur.rowcount)	
 
 def main(con,cur):
 	url_list = json.load(open('cl_listings.json'))
