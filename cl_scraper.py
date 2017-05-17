@@ -94,7 +94,7 @@ def main(con,cur):
 		print 'i is %s' % i
 		urls = getResults(i)
 		print 'got results'
-		for url in urls[:2]:
+		for url in urls:
 			print 'index is %s' % (i)
 			if url not in url_list:
 				url_list.append(url)
