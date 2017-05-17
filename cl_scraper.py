@@ -123,5 +123,8 @@ def main(con,cur):
 
 if __name__ == "__main__":
 	con, cur = DBbuild()
+	print 'db connected'
 	main(con,cur)
-	#checkdb(con,cur)
+	print 'main function'
+	checkdb(con,cur)
+	print 'checkdb done'
