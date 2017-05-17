@@ -82,15 +82,14 @@ def DBwrite(re_data, con, cur):
 	except:
 		con.rollback()
 
-def checkdb():
+def checkdb(con, cur):
 	qry = 'select * from re_data'
 	cur.execute(qry, con)
 
 	print '%s total records'.format(len(cur))	
 
-def main():
+def main(con,cur):
 	url_list = json.load(open('cl_listings.json'))
-	con, cur = DBbuild()
 	for i in np.arange(0,2500,100):
 		urls = getResults(i)
 		for url in urls:
@@ -123,5 +122,6 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
-	checkdb()
+	con, cur = DBbuild()
+	main(con,cur)
+	checkdb(con,cur)
