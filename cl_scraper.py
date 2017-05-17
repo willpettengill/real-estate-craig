@@ -115,8 +115,7 @@ def main(con,cur):
 					print 'url is %s' % (url)
 					continue
 				time.sleep(2)
-			else:
-				continue	
+			
 		with open('cl_listings.json', 'w') as f:
 		        json.dump(list(set(url_list)), f)	
 
