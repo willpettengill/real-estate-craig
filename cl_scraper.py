@@ -56,7 +56,9 @@ def getResults(page=1):
 	base_url = 'https://newyork.craigslist.org/search/off?bundleDuplicates=1'
 	#rsp = requests.get('https://newyork.craigslist.org/search/off?bundleDuplicates=1&min_price=1&max_price=1000000&minSqft=1&maxSqft=1000000&availabilityMode=0')
 	rsp = requests.get(base_url, params = {'min_price':1,'max_price':1000000, 'minSqft':1, 'maxSqft':1000000, 's':page})
+	print 'rsp is %s' % (rsp)
 	html = bs4(rsp.text, 'html.parser')
+	print html.text
 	listings = html.find_all(attrs={'class': 'result-row'})
 	for listing in listings:
 			detail =  listing.find_all(attrs={'class': 'result-title hdrlnk'})
