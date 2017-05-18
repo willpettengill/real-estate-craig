@@ -58,7 +58,7 @@ def getResults(page=1):
 	rsp = requests.get(base_url, params = {'min_price':1,'max_price':1000000, 'minSqft':1, 'maxSqft':1000000, 's':page})
 	if rsp.status_code == 403:
 		print rsp.text
-		break
+		exit()
 	else:		
 		html = bs4(rsp.text, 'html.parser')
 		listings = html.find_all(attrs={'class': 'result-row'})
