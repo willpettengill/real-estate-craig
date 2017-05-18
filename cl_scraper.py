@@ -93,7 +93,7 @@ def main(con,cur):
 	for i in np.arange(0,2500,100):
 		print 'i is %s' % i
 		urls = getResults(i)
-		print 'got results'
+		print 'got %s results' % (len(urls))
 		for url in urls:
 			print 'index is %s' % (i)
 			if url not in url_list:
