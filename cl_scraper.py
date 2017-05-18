@@ -73,11 +73,11 @@ def DBbuild():
 	#cur.execute('drop table if exists re_data; Create table re_data (address text, latitude double precision, longitude double precision, sqfeet int, fulltitle text, neighborhood text, price int, title text);')
 	return con, cur
 
-def DBwrite(re_data, con, cur):
+def DBwrite(re_data, con, cur, url):
 	today = datetime.date.today().strftime("%D")
 	try:
 		qry = '''
-		insert into re_data (address, latitude, longitude, sqfeet, fulltitle, neighborhood, price, title, url, date) values (%s, %s, %s, %s, %s, %s, %s, %s)
+		insert into re_data (address, latitude, longitude, sqfeet, fulltitle, neighborhood, price, title, url, date) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 		''' 
 		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title, url, today))
 		print 'insert success'
@@ -114,7 +114,7 @@ def main(con,cur):
 					print 'url is %s' % (url)
 					continue
 				try:
-					DBwrite(re_data, con, cur) #Build this function
+					DBwrite(re_data, con, cur, url) #Build this function
 					print 'wrote to db'
 				except:
 					print 'problem writing to db'
