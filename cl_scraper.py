@@ -94,11 +94,10 @@ def checkdb(con, cur):
 def main(con,cur):
 	url_list = json.load(open('cl_listings.json'))
 	for i in np.arange(0,2500,100):
-		print 'i is %s' % i
+		print 'index is %s' % i
 		urls = getResults(i)
 		print 'got %s results' % (len(urls))
 		for url in urls:
-			print 'index is %s' % (i)
 			if url not in url_list:
 				url_list.append(url)
 				try:
@@ -120,7 +119,7 @@ def main(con,cur):
 					print 'problem writing to db'
 					print 'url is %s' % (url)
 					continue
-				time.sleep(20)
+				time.sleep(200)
 			
 	with open('cl_listings.json', 'w') as f:
 	        json.dump(list(set(url_list)), f)	
