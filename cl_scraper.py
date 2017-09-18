@@ -6,19 +6,18 @@ from craigslist_scraper import scraper
 import numpy as np
 import psycopg2
 import time
-import datetime
+import datetime as dt
 import logging
+from dateutil.parser import parse
 #dbname = scraper, table = re_data
 
 #TO DO:
 
-#Set up database functionality to write to AWS
-#create text file of all urls to prevent duplicate scraping
-#iterate to get all CL listings, rather than first 160
-#use: http://chrisholdgraf.com/querying-craigslist-with-python/
-#
 
 #Extend basic scraper function to include additional meta data from CL listing
+## this should include posting date to find listings that keep getting re-listed
+## add other Geo's
+
 def AddMeta(x):
 	if x.soup:
 		
@@ -46,6 +45,10 @@ def AddMeta(x):
 			x.neighborhood = x.fulltitle[x.fulltitle.find('(')+1:x.fulltitle.find(')')]
 		except:
 			x.neighborhood = None
+		try:
+			x.post_date = parse(re_data.soup.findAll(attrs={'class': 'date timeago'})[0]['datetime'])
+		except:
+			x.post_date = None	
 	else:
 		pass
 
@@ -69,35 +72,39 @@ def getResults(page=1):
 
 def DBbuild():
 	con = psycopg2.connect("dbname='scraper' user='wpettengill' password='wpettengill' host='craigslistdb.cnc0ky2ic2hk.us-east-1.rds.amazonaws.com' port='5432'")
-	cur = con.cursor()
 	#cur.execute('drop table if exists re_data; Create table re_data (address text, latitude double precision, longitude double precision, sqfeet int, fulltitle text, neighborhood text, price int, title text);')
-	return con, cur
+	return con
 
-def DBwrite(re_data, con, cur, url):
-	today = datetime.date.today().strftime("%D")
+def DBwrite(re_data, con, url):
+	
 	try:
+		cur = con.cursor()
 		qry = '''
 		insert into re_data (address, latitude, longitude, sqfeet, fulltitle, neighborhood, price, title, url, date) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 		''' 
-		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title, url, today))
+		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title, url, re_data.post_date.strftime('%Y/%m/%d')))
 		print 'insert success'
 		con.commit()
+		cur.close()
 	except:
 		con.rollback()
 
-def checkdb(con, cur):
+def checkdb(con):
+	cur = con.cursor()
 	qry = 'select * from re_data'
 	cur.execute(qry, con)
 
 	print '%s total records' % (cur.rowcount)	
 
-def main(con,cur):
+def main(con):
 	url_list = json.load(open('cl_listings.json'))
+	date_list = [dt.datetime.utcnow()]
 	for i in np.arange(0,2500,100):
 		print 'index is %s' % i
 		urls = getResults(i)
 		print 'got %s results' % (len(urls))
-		for url in urls:
+		for url in urls[50:60]:
+			time.sleep(3)
 			if url not in url_list:
 				url_list.append(url)
 				try:
@@ -113,22 +120,30 @@ def main(con,cur):
 					print 'url is %s' % (url)
 					continue
 				try:
-					DBwrite(re_data, con, cur, url) #Build this function
+					DBwrite(re_data, con, url) #Build this function
 					print 'wrote to db'
 				except:
 					print 'problem writing to db'
 					print 'url is %s' % (url)
 					continue
-				time.sleep(200)
+				try:
+					date_list.append(re_data.post_date.replace(tzinfo=None))
+				except:
+					continue	
+		if min(date_list) < (dt.datetime.utcnow() - dt.timedelta(3)):
+			break
+		else:
+			time.sleep(100)
+
 			
 	with open('cl_listings.json', 'w') as f:
 	        json.dump(list(set(url_list)), f)	
 
 
 if __name__ == "__main__":
-	con, cur = DBbuild()
+	con = DBbuild()
 	print 'db connected'
-	main(con,cur)
+	main(con)
 	print 'main function'
 	checkdb(con,cur)
 	print 'checkdb done'
