@@ -47,15 +47,20 @@ def AddMeta(x):
 			x.neighborhood = None
 		try:
 			x.post_date = parse(re_data.soup.findAll(attrs={'class': 'date timeago'})[0]['datetime'])
+			
 		except:
 			x.post_date = None	
+		try:
+			x.post_date_str = re_data.post_date.strftime('%Y/%m/%d')
+		except:	
+			x.post_date_str = None
 	else:
 		pass
 
 #Parse a CL result page into a list of links to pass to scraper and AddMeta
 def getResults(page=1):
 	link_list = []
-	base_url = 'https://newyork.craigslist.org/search/off?bundleDuplicates=1'
+	base_url = 'https://boston.craigslist.org/search/gbs/reb'
 	#rsp = requests.get('https://newyork.craigslist.org/search/off?bundleDuplicates=1&min_price=1&max_price=1000000&minSqft=1&maxSqft=1000000&availabilityMode=0')
 	rsp = requests.get(base_url, params = {'min_price':1,'max_price':1000000, 'minSqft':1, 'maxSqft':1000000, 's':page})
 	if rsp.status_code == 403:
@@ -66,7 +71,7 @@ def getResults(page=1):
 		listings = html.find_all(attrs={'class': 'result-row'})
 		for listing in listings:
 				detail =  listing.find_all(attrs={'class': 'result-title hdrlnk'})
-				link = 'https://newyork.craigslist.org/' + detail[0]['href']
+				link = detail[0]['href']
 				link_list.append(link)
 	return link_list
 
@@ -77,17 +82,13 @@ def DBbuild():
 
 def DBwrite(re_data, con, url):
 	
-	try:
 		cur = con.cursor()
 		qry = '''
 		insert into re_data (address, latitude, longitude, sqfeet, fulltitle, neighborhood, price, title, url, date) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 		''' 
-		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title, url, re_data.post_date.strftime('%Y/%m/%d')))
-		print 'insert success'
+		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title, url, re_data.post_date_str))
 		con.commit()
 		cur.close()
-	except:
-		con.rollback()
 
 def checkdb(con):
 	cur = con.cursor()
@@ -97,47 +98,32 @@ def checkdb(con):
 	print '%s total records' % (cur.rowcount)	
 
 def main(con):
-	url_list = json.load(open('cl_listings.json'))
-	date_list = [dt.datetime.utcnow()]
-	for i in np.arange(0,2500,100):
-		print 'index is %s' % i
-		urls = getResults(i)
-		print 'got %s results' % (len(urls))
-		for url in urls[50:60]:
-			time.sleep(3)
-			if url not in url_list:
-				url_list.append(url)
-				try:
+		url_list = json.load(open('cl_listings.json'))
+		date_list = [dt.datetime.utcnow()]
+		for i in np.arange(0,2500,100):
+			print 'index is %s' % i
+			urls = getResults(i)
+			if len(urls) == 0:
+				break
+			print 'got %s results' % (len(urls))
+			for url in urls:
+				time.sleep(3)
+				if url not in url_list:
+					url_list.append(url)
 					re_data = scraper.scrape_url(url)
-				except:
-					print 'problem scraping'
-					print 'url is %s' % (url)
-					continue
-				try:
 					AddMeta(re_data)
-				except:
-					print 'problem adding additional meta'
-					print 'url is %s' % (url)
-					continue
-				try:
 					DBwrite(re_data, con, url) #Build this function
-					print 'wrote to db'
-				except:
-					print 'problem writing to db'
-					print 'url is %s' % (url)
-					continue
-				try:
-					date_list.append(re_data.post_date.replace(tzinfo=None))
-				except:
-					continue	
-		if min(date_list) < (dt.datetime.utcnow() - dt.timedelta(3)):
-			break
-		else:
-			time.sleep(100)
+					if re_data.post_date:
+						date_list.append(re_data.post_date.replace(tzinfo=None))
+					
+			if min(date_list) < (dt.datetime.utcnow() - dt.timedelta(3)):
+				break
+			else:
+				time.sleep(100)
 
 			
-	with open('cl_listings.json', 'w') as f:
-	        json.dump(list(set(url_list)), f)	
+		with open('cl_listings.json', 'w') as f:
+		        json.dump(list(set(url_list)), f)	
 
 
 if __name__ == "__main__":
@@ -145,5 +131,5 @@ if __name__ == "__main__":
 	print 'db connected'
 	main(con)
 	print 'main function'
-	checkdb(con,cur)
+	checkdb(con)
 	print 'checkdb done'
