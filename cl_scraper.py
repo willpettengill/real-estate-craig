@@ -9,14 +9,8 @@ import time
 import datetime as dt
 import logging
 from dateutil.parser import parse
-#dbname = scraper, table = re_data
 
-#TO DO:
-
-
-#Extend basic scraper function to include additional meta data from CL listing
-## this should include posting date to find listings that keep getting re-listed
-## add other Geo's
+#dbname = scraper, table = re_data, password = 'wpettengill'
 
 def AddMeta(x):
 	if x.soup:
@@ -58,11 +52,11 @@ def AddMeta(x):
 		pass
 
 #Parse a CL result page into a list of links to pass to scraper and AddMeta
+
 def getResults(page=1):
 	link_list = []
-	base_url = 'https://boston.craigslist.org/search/gbs/reb'
-	#rsp = requests.get('https://newyork.craigslist.org/search/off?bundleDuplicates=1&min_price=1&max_price=1000000&minSqft=1&maxSqft=1000000&availabilityMode=0')
-	rsp = requests.get(base_url, params = {'min_price':1,'max_price':1000000, 'minSqft':1, 'maxSqft':1000000, 's':page})
+	base_url = 'https://boston.craigslist.org/search/gbs/reb?'
+	rsp = requests.get(base_url, params = {'min_price':1,'max_price':1000000, 'minSqft':1, 'maxSqft':1000000, 's':page, 'bundleDuplicates':1})
 	if rsp.status_code == 403:
 		print rsp.text
 		exit()
@@ -77,7 +71,6 @@ def getResults(page=1):
 
 def DBbuild():
 	con = psycopg2.connect("dbname='scraper' user='wpettengill' password='wpettengill' host='craigslistdb.cnc0ky2ic2hk.us-east-1.rds.amazonaws.com' port='5432'")
-	#cur.execute('drop table if exists re_data; Create table re_data (address text, latitude double precision, longitude double precision, sqfeet int, fulltitle text, neighborhood text, price int, title text);')
 	return con
 
 def DBwrite(re_data, con, url):
@@ -112,7 +105,7 @@ def main(con):
 					url_list.append(url)
 					re_data = scraper.scrape_url(url)
 					AddMeta(re_data)
-					DBwrite(re_data, con, url) #Build this function
+					DBwrite(re_data, con, url) 
 					if re_data.post_date:
 						date_list.append(re_data.post_date.replace(tzinfo=None))
 					
