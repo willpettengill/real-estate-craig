@@ -48,6 +48,10 @@ def AddMeta(x):
 			x.post_date_str = re_data.post_date.strftime('%Y/%m/%d')
 		except:	
 			x.post_date_str = None
+		try:
+			x.info = re_data.soup.findAll(attrs={'class': 'housing'})[0].contents[0]
+		except:
+			x.info = None	
 	else:
 		pass
 
@@ -77,9 +81,9 @@ def DBwrite(re_data, con, url):
 	
 		cur = con.cursor()
 		qry = '''
-		insert into re_data (address, latitude, longitude, sqfeet, fulltitle, neighborhood, price, title, url, date) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+		insert into re_data (address, latitude, longitude, sqfeet, fulltitle, neighborhood, price, title, url, date, info) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 		''' 
-		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title, url, re_data.post_date_str))
+		cur.execute(qry, (re_data.address, re_data.latitude, re_data.longitude, re_data.sqfeet, re_data.fulltitle, re_data.neighborhood, re_data.price, re_data.title, url, re_data.post_date_str, re_data.info))
 		con.commit()
 		cur.close()
 
