@@ -93,7 +93,7 @@ def checkdb(con):
 def main(con):
 		url_list = json.load(open('/home/ec2-user/real-estate-craig/cl_listings.json'))
 		date_list = [dt.datetime.utcnow()]
-		for i in np.arange(0,2500,100):
+		for i in np.arange(0,2500,120):
 			urls = getResults(i)
 			print 'index is {}......... got {} results'.format(i, len(urls))
 			if len(urls) == 0:
