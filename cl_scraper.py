@@ -55,7 +55,7 @@ def AddMeta(x):
 
 def getResults(page=1):
 	link_list = []
-	base_url = 'https://boston.craigslist.org/d/real-estate/search/rea?'
+	base_url = 'https://boston.craigslist.org/search/gbs/rea?'
 	rsp = requests.get(base_url, params = {'min_price':1,'max_price':1000000, 'minSqft':1, 'maxSqft':1000000, 's':page, 'bundleDuplicates':1})
 	if rsp.status_code == 403:
 		print rsp.text
