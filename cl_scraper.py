@@ -91,14 +91,13 @@ def checkdb(con):
 	print '%s total records' % (cur.rowcount)	
 
 def main(con):
-		url_list = json.load(open('cl_listings.json'))
+		url_list = json.load(open('/home/ec2-user/real-estate-craig/cl_listings.json'))
 		date_list = [dt.datetime.utcnow()]
 		for i in np.arange(0,2500,100):
-			print 'index is %s' % i
 			urls = getResults(i)
+			print 'index is {}......... got {} results'.format(i, len(urls))
 			if len(urls) == 0:
 				break
-			print 'got %s results' % (len(urls))
 			for url in urls:
 				time.sleep(3)
 				if url not in url_list:
@@ -115,12 +114,13 @@ def main(con):
 				time.sleep(100)
 
 			
-		with open('cl_listings.json', 'w') as f:
+		with open('/home/ec2-user/real-estate-craig/cl_listings.json', 'w') as f:
 		        json.dump(list(set(url_list)), f)	
 
 
 if __name__ == "__main__":
-	con = DBbuild()
+	print 'today is {}'.format(dt.datetime.today())
+        con = DBbuild()
 	print 'db connected'
 	main(con)
 	print 'main function'
